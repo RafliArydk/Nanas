@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 function handle_action(PDO $pdo, ?string $action, string $page): void
@@ -33,7 +34,6 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
     if ($page === 'logout') {
         session_destroy();
         session_start();
-        flash('Logout berhasil.');
         redirect('home');
     }
 

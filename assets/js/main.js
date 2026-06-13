@@ -76,8 +76,8 @@ const ROLE_CONFIG = {
 const PAGE_ACCESS = {
   guest:  ['home', 'catalog'],
   buyer:  ['home', 'catalog', 'checkout', 'tracking', 'buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications', 'cart'],
-  seller: ['seller'],
-  admin:  ['admin']
+  seller: ['home', 'catalog', 'seller', 'seller_products', 'seller_orders', 'seller_notifications'],
+  admin:  ['home', 'catalog', 'admin', 'admin_users', 'admin_categories', 'admin_notifications']
 };
 
 // Human-readable page names for error messages
@@ -119,6 +119,31 @@ function showPage(name) {
   page.classList.add('active');
   updateNavActive(name);
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function scrollToHomeSection(sectionId) {
+  // Make sure we're on the home page first
+  const homePage = document.getElementById('page-home');
+  if (homePage && !homePage.classList.contains('active')) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    homePage.classList.add('active');
+    updateNavActive('home');
+  }
+  // Wait a tick then scroll to the section
+  setTimeout(() => {
+    const target = document.getElementById(sectionId);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 50);
+}
+
+function goToNotifications() {
+  const role = currentUser ? currentUser.role : 'guest';
+  if (role === 'buyer')  { showPage('buyer_notifications'); return; }
+  if (role === 'seller') { showPage('seller_notifications'); return; }
+  if (role === 'admin')  { showPage('admin_notifications');  return; }
+  openAuth();
 }
 
 function handleAccessDenied(pageName) {

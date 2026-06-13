@@ -44,7 +44,7 @@
     ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
   </script>
   <?php endif; ?>
-  <script src="assets/js/main.js"></script>
+  <script src="assets/js/main.js?v=<?= time() ?>"></script>
 </main>
 
 </body>

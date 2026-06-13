@@ -138,11 +138,12 @@ function log_activity(PDO $pdo, string $activity): void
 
 function cart_count(PDO $pdo): int
 {
-    if (!is_role('buyer')) {
+    $user = current_user();
+    if (!$user) {
         return 0;
     }
     $stmt = $pdo->prepare('SELECT COALESCE(SUM(qty),0) FROM carts WHERE buyer_id = ?');
-    $stmt->execute([current_user()['id']]);
+    $stmt->execute([$user['id']]);
     return (int) $stmt->fetchColumn();
 }
 

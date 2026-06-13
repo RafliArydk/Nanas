@@ -63,14 +63,11 @@
       <div class="dash-topbar">
         <div class="dash-topbar-left">
           <h2>Dashboard Penjual</h2>
-          <p>Selamat datang kembali, <b>Toko Buku Sari</b> 👋 — Kamis, 5 Juni 2025</p>
+          <p>Selamat datang kembali, <b><?= e(current_user()['name']) ?></b> 👋 — <?= date('l, d F Y') ?></p>
         </div>
         <div class="dash-topbar-right">
           <select class="dash-period-select">
-            <option>Bulan Ini</option>
-            <option>30 Hari Terakhir</option>
-            <option>Kuartal Ini</option>
-            <option>Tahun Ini</option>
+            <option>Semua Waktu</option>
           </select>
           <button class="btn-dash-primary" onclick="showToast('📦 Form tambah produk dibuka!')">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -83,11 +80,13 @@
       <div class="dash-body">
 
         <!-- Alert strip -->
+        <?php if (!empty($lowStockProducts)): ?>
         <div class="alert-strip">
           <span class="alert-strip-icon">⚠️</span>
-          <div class="alert-strip-text"><b>3 produk</b> hampir kehabisan stok. Segera lakukan restock agar tidak kehilangan pembeli.</div>
+          <div class="alert-strip-text"><b><?= count($lowStockProducts) ?> produk</b> hampir kehabisan stok. Segera lakukan restock agar tidak kehilangan pembeli.</div>
           <button class="alert-strip-action" onclick="showToast('📦 Menuju halaman stok...')">Lihat Produk →</button>
         </div>
+        <?php endif; ?>
 
         <!-- Metrics -->
         <div class="metrics-grid">
@@ -95,45 +94,45 @@
           <div class="metric-card">
             <div class="metric-card-top">
               <div class="metric-icon-wrap" style="background:#f0fdf4">💰</div>
-              <div class="metric-trend trend-up">▲ 12%</div>
+              <div class="metric-trend trend-up">-</div>
             </div>
-            <div class="metric-val">Rp 4,8jt</div>
-            <div class="metric-label">Pendapatan Bulan Ini</div>
-            <div class="metric-sub">vs Rp 4,3jt bulan lalu</div>
-            <div class="metric-bar"><div class="metric-bar-fill" style="width:78%;background:linear-gradient(90deg,var(--accent),var(--accent-mid))"></div></div>
+            <div class="metric-val">Rp <?= number_format((float)$revenue, 0, ',', '.') ?></div>
+            <div class="metric-label">Total Pendapatan</div>
+            <div class="metric-sub">sepanjang waktu</div>
+            <div class="metric-bar"><div class="metric-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--accent),var(--accent-mid))"></div></div>
           </div>
           <!-- Orders -->
           <div class="metric-card">
             <div class="metric-card-top">
               <div class="metric-icon-wrap" style="background:#eff6ff">📦</div>
-              <div class="metric-trend trend-up">▲ 8</div>
+              <div class="metric-trend trend-up">-</div>
             </div>
-            <div class="metric-val">142</div>
+            <div class="metric-val"><?= (int)$totalOrders ?></div>
             <div class="metric-label">Total Pesanan</div>
-            <div class="metric-sub">8 pesanan baru hari ini</div>
-            <div class="metric-bar"><div class="metric-bar-fill" style="width:62%;background:linear-gradient(90deg,#3b82f6,#60a5fa)"></div></div>
+            <div class="metric-sub">sepanjang waktu</div>
+            <div class="metric-bar"><div class="metric-bar-fill" style="width:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa)"></div></div>
           </div>
           <!-- Products -->
           <div class="metric-card">
             <div class="metric-card-top">
               <div class="metric-icon-wrap" style="background:#fdf4ff">📚</div>
-              <div class="metric-trend trend-neutral">3 ⚠️</div>
+              <div class="metric-trend trend-neutral"><?= count($lowStockProducts) ?> ⚠️</div>
             </div>
-            <div class="metric-val">24</div>
+            <div class="metric-val"><?= (int)$activeProducts ?></div>
             <div class="metric-label">Produk Aktif</div>
-            <div class="metric-sub">3 stok hampir habis</div>
-            <div class="metric-bar"><div class="metric-bar-fill" style="width:45%;background:linear-gradient(90deg,#a855f7,#c084fc)"></div></div>
+            <div class="metric-sub"><?= count($lowStockProducts) ?> stok hampir habis</div>
+            <div class="metric-bar"><div class="metric-bar-fill" style="width:100%;background:linear-gradient(90deg,#a855f7,#c084fc)"></div></div>
           </div>
           <!-- Rating -->
           <div class="metric-card">
             <div class="metric-card-top">
               <div class="metric-icon-wrap" style="background:#fffbeb">⭐</div>
-              <div class="metric-trend trend-up">Sangat Baik</div>
+              <div class="metric-trend trend-up">-</div>
             </div>
-            <div class="metric-val">4.87</div>
+            <div class="metric-val"><?= number_format((float)$ratingData['avg_rating'], 1) ?></div>
             <div class="metric-label">Rating Toko</div>
-            <div class="metric-sub">dari 328 ulasan pembeli</div>
-            <div class="metric-bar"><div class="metric-bar-fill" style="width:97%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div></div>
+            <div class="metric-sub">dari <?= (int)$ratingData['total_reviews'] ?> ulasan pembeli</div>
+            <div class="metric-bar"><div class="metric-bar-fill" style="width:<?= min(100, (float)$ratingData['avg_rating'] * 20) ?>%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div></div>
           </div>
         </div>
 
@@ -310,58 +309,40 @@
                 </tr>
               </thead>
               <tbody>
+                <?php if (empty($recentOrders)): ?>
                 <tr>
-                  <td><span class="td-order">#RB-001</span></td>
-                  <td>
-                    <div class="td-buyer">
-                      <div class="td-buyer-avatar">BW</div>
-                      <span class="td-buyer-name">Bimo W.</span>
-                    </div>
-                  </td>
-                  <td><span class="td-book">Atomic Habits × 1</span></td>
-                  <td><span class="td-total">Rp 89.000</span></td>
-                  <td><span class="status s-paid">● Dibayar</span></td>
-                  <td><button class="action-btn" onclick="showToast('📦 Pesanan dikonfirmasi & dikirim!')">Kirim</button></td>
+                  <td colspan="6" class="text-center">Belum ada pesanan terbaru.</td>
                 </tr>
+                <?php else: ?>
+                <?php foreach ($recentOrders as $ro): ?>
                 <tr>
-                  <td><span class="td-order">#RB-002</span></td>
+                  <td><span class="td-order"><?= e($ro['invoice_number']) ?></span></td>
                   <td>
                     <div class="td-buyer">
-                      <div class="td-buyer-avatar">SR</div>
-                      <span class="td-buyer-name">Sari R.</span>
+                      <div class="td-buyer-avatar"><?= strtoupper(substr($ro['buyer_name'], 0, 2)) ?></div>
+                      <span class="td-buyer-name"><?= e($ro['buyer_name']) ?></span>
                     </div>
                   </td>
-                  <td><span class="td-book">Bumi Manusia × 2</span></td>
-                  <td><span class="td-total">Rp 170.000</span></td>
-                  <td><span class="status s-pending">● Menunggu</span></td>
-                  <td><button class="action-btn" onclick="showToast('✅ Pesanan dikonfirmasi!')">Konfirmasi</button></td>
-                </tr>
-                <tr>
-                  <td><span class="td-order">#RB-003</span></td>
+                  <td><span class="td-book"><?= e($ro['product_names']) ?></span></td>
+                  <td><span class="td-total">Rp <?= number_format((float)$ro['seller_total'], 0, ',', '.') ?></span></td>
                   <td>
-                    <div class="td-buyer">
-                      <div class="td-buyer-avatar">DL</div>
-                      <span class="td-buyer-name">Dewi L.</span>
-                    </div>
+                    <?php
+                    $statusMap = [
+                        'pending' => ['Menunggu', 's-pending'],
+                        'paid' => ['Dibayar', 's-paid'],
+                        'processing' => ['Diproses', 's-paid'],
+                        'shipped' => ['Dikirim', 's-ship'],
+                        'delivered' => ['Selesai', 's-done'],
+                        'cancelled' => ['Batal', 's-cancel']
+                    ];
+                    $s = $statusMap[$ro['status']] ?? ['Unknown', 's-pending'];
+                    ?>
+                    <span class="status <?= $s[1] ?>">● <?= $s[0] ?></span>
                   </td>
-                  <td><span class="td-book">Rich Dad + Sapiens</span></td>
-                  <td><span class="td-total">Rp 190.000</span></td>
-                  <td><span class="status s-ship">● Dikirim</span></td>
                   <td><button class="action-btn" onclick="showToast('📋 Detail pesanan')">Detail</button></td>
                 </tr>
-                <tr>
-                  <td><span class="td-order">#RB-004</span></td>
-                  <td>
-                    <div class="td-buyer">
-                      <div class="td-buyer-avatar">AF</div>
-                      <span class="td-buyer-name">Ahmad F.</span>
-                    </div>
-                  </td>
-                  <td><span class="td-book">Ikigai × 1</span></td>
-                  <td><span class="td-total">Rp 78.000</span></td>
-                  <td><span class="status s-done">● Selesai</span></td>
-                  <td><button class="action-btn" onclick="showToast('📋 Detail pesanan')">Detail</button></td>
-                </tr>
+                <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
@@ -393,7 +374,7 @@
                   <div class="qa-icon" style="background:#eff6ff">🏦</div>
                   <div>
                     <div class="qa-title">Tarik Dana</div>
-                    <div class="qa-desc">Saldo: Rp 4.800.000</div>
+                    <div class="qa-desc">Saldo: Rp <?= number_format((float)$revenue, 0, ',', '.') ?></div>
                   </div>
                   <span class="qa-arrow">›</span>
                 </button>
@@ -401,7 +382,7 @@
                   <div class="qa-icon" style="background:#fdf4ff">💬</div>
                   <div>
                     <div class="qa-title">Balas Ulasan</div>
-                    <div class="qa-desc">4 ulasan belum dibalas</div>
+                    <div class="qa-desc">Lihat ulasan terbaru</div>
                   </div>
                   <span class="qa-arrow">›</span>
                 </button>
@@ -411,48 +392,28 @@
         </div>
 
         <!-- Low stock -->
+        <?php if (!empty($lowStockProducts)): ?>
         <div class="lowstock-card">
           <div class="lowstock-card-head">
             <h4>⚠️ Stok Rendah</h4>
             <a href="#" style="font-size:12px;color:var(--accent);font-weight:600" onclick="showToast('📦 Halaman produk')">Kelola produk →</a>
           </div>
+          <?php foreach ($lowStockProducts as $ls): ?>
           <div class="lowstock-row">
-            <div class="ls-cover bc1">AH</div>
+            <div class="ls-cover bc1"><?= strtoupper(substr($ls['name'], 0, 2)) ?></div>
             <div class="ls-info">
-              <div class="ls-title">Atomic Habits</div>
-              <div class="ls-cat">Pengembangan Diri · Rp 89.000</div>
+              <div class="ls-title"><?= e($ls['name']) ?></div>
+              <div class="ls-cat">Rp <?= number_format((float)$ls['price'], 0, ',', '.') ?></div>
             </div>
             <div class="ls-stock-indicator">
-              <div class="ls-stock-bar"><div class="ls-stock-bar-fill" style="width:15%;background:#ef4444"></div></div>
-              <div class="ls-stock-num">3</div>
-              <button class="action-btn warn" onclick="showToast('📦 Form restock Atomic Habits')">+ Restock</button>
+              <div class="ls-stock-bar"><div class="ls-stock-bar-fill" style="width:<?= min(100, (int)$ls['stock'] * 10) ?>%;background:<?= $ls['stock'] <= 3 ? '#ef4444' : '#f59e0b' ?>"></div></div>
+              <div class="ls-stock-num" <?= $ls['stock'] > 3 ? 'style="background:#fff7ed;color:#d97706"' : '' ?>><?= (int)$ls['stock'] ?></div>
+              <button class="action-btn warn" onclick="showToast('📦 Form restock <?= e($ls['name']) ?>')">+ Restock</button>
             </div>
           </div>
-          <div class="lowstock-row">
-            <div class="ls-cover bc3">ML</div>
-            <div class="ls-info">
-              <div class="ls-title">The Midnight Library</div>
-              <div class="ls-cat">Fiksi Internasional · Rp 76.000</div>
-            </div>
-            <div class="ls-stock-indicator">
-              <div class="ls-stock-bar"><div class="ls-stock-bar-fill" style="width:25%;background:#f59e0b"></div></div>
-              <div class="ls-stock-num" style="background:#fff7ed;color:#d97706">5</div>
-              <button class="action-btn warn" onclick="showToast('📦 Form restock Midnight Library')">+ Restock</button>
-            </div>
-          </div>
-          <div class="lowstock-row">
-            <div class="ls-cover bc5">PM</div>
-            <div class="ls-info">
-              <div class="ls-title">Psychology of Money</div>
-              <div class="ls-cat">Psikologi & Keuangan · Rp 92.000</div>
-            </div>
-            <div class="ls-stock-indicator">
-              <div class="ls-stock-bar"><div class="ls-stock-bar-fill" style="width:35%;background:#f59e0b"></div></div>
-              <div class="ls-stock-num" style="background:#fff7ed;color:#d97706">7</div>
-              <button class="action-btn warn" onclick="showToast('📦 Form restock Psychology of Money')">+ Restock</button>
-            </div>
-          </div>
+          <?php endforeach; ?>
         </div>
+        <?php endif; ?>
 
       </div>
     </div>

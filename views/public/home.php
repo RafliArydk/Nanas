@@ -179,7 +179,7 @@
   </section>
 
   <!-- SELLER CTA -->
-  <div class="seller-cta-section" data-role="buyer">
+  <div class="seller-cta-section" id="section-cara-kerja" data-role="buyer">
     <h2>Punya Buku untuk Dijual? ✍️</h2>
     <p>Bergabunglah dengan 500+ penjual aktif di RubbyBooks. Mudah, aman, dan komisi transparan.</p>
     <div class="seller-steps">
@@ -192,7 +192,7 @@
   </div>
 
   <!-- TESTIMONIALS -->
-  <section class="section">
+  <section class="section" id="section-testimoni">
     <div class="sec-head">
       <h2 class="sec-title">💬 Apa Kata <span>Pembeli Kami</span></h2>
     </div>
