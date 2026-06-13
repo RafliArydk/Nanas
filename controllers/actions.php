@@ -61,6 +61,50 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         redirect('cart');
     }
 
+    if ($action === 'toggle_wishlist') {
+        require_role('buyer');
+        $userId = current_user()['id'];
+        $productId = (int) $_POST['product_id'];
+        
+        $stmt = $pdo->prepare('SELECT id FROM wishlists WHERE buyer_id = ? AND product_id = ?');
+        $stmt->execute([$userId, $productId]);
+        if ($stmt->fetch()) {
+            $pdo->prepare('DELETE FROM wishlists WHERE buyer_id = ? AND product_id = ?')->execute([$userId, $productId]);
+            flash('Buku dihapus dari wishlist.');
+        } else {
+            $pdo->prepare('INSERT INTO wishlists (buyer_id, product_id) VALUES (?, ?)')->execute([$userId, $productId]);
+            flash('Buku ditambahkan ke wishlist.');
+        }
+        redirect('catalog');
+    }
+
+    if ($action === 'update_account') {
+        require_login();
+        $userId = current_user()['id'];
+        $name = trim($_POST['name'] ?? '');
+        $password = $_POST['password'] ?? '';
+        
+        if ($name) {
+            if (!empty($password)) {
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $pdo->prepare('UPDATE users SET name = ?, password = ? WHERE id = ?')->execute([$name, $hash, $userId]);
+            } else {
+                $pdo->prepare('UPDATE users SET name = ? WHERE id = ?')->execute([$name, $userId]);
+            }
+            $_SESSION['user']['name'] = $name;
+            flash('Profil berhasil disimpan.');
+        }
+        redirect(current_user()['role'] . '_account');
+    }
+
+    if ($action === 'submit_review') {
+        require_role('buyer');
+        $pdo->prepare('INSERT INTO reviews (buyer_id, product_id, rating, comment) VALUES (?, ?, ?, ?)')
+            ->execute([current_user()['id'], $_POST['product_id'], $_POST['rating'], $_POST['comment']]);
+        flash('Review berhasil dikirim. Terima kasih!');
+        redirect('buyer_orders');
+    }
+
     if ($action === 'checkout') {
         require_role('buyer');
         $pdo->beginTransaction();
@@ -83,9 +127,10 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         $subtotal = array_sum(array_map(fn($item) => (int) $item['price'] * (int) $item['qty'], $items));
         $pdo->prepare('INSERT INTO shipping_addresses (buyer_id,recipient_name,phone,address,city,postal_code) VALUES (?,?,?,?,?,?)')
             ->execute([current_user()['id'], $_POST['recipient_name'], $_POST['phone'], $_POST['address'], $_POST['city'], $_POST['postal_code']]);
+        $shippingAddressId = (int) $pdo->lastInsertId();
         $invoice = next_invoice($pdo);
         $pdo->prepare('INSERT INTO orders (buyer_id,shipping_address_id,invoice_number,total,shipping_cost) VALUES (?,?,?,?,?)')
-            ->execute([current_user()['id'], $pdo->lastInsertId(), $invoice, $subtotal + $shipping, $shipping]);
+            ->execute([current_user()['id'], $shippingAddressId, $invoice, $subtotal + $shipping, $shipping]);
         $orderId = (int) $pdo->lastInsertId();
         foreach ($items as $item) {
             $line = (int) $item['price'] * (int) $item['qty'];

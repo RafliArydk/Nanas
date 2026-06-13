@@ -1375,7 +1375,7 @@ textarea.form-input { resize:vertical; min-height:90px; }
   .hero { grid-template-columns:1fr; }
   .hero-visual { display:none; }
   .metrics { grid-template-columns:1fr 1fr; }
-  .charts-row { grid-template-columns:1fr; }
+  .charts-row, .bottom-row { grid-template-columns:1fr; }
   .catalog-layout { grid-template-columns:1fr; }
   .catalog-sidebar { display:none; }
   .testi-grid { grid-template-columns:1fr 1fr; }
@@ -1390,7 +1390,27 @@ textarea.form-input { resize:vertical; min-height:90px; }
   .section { padding:36px 20px; }
   .checkout-grid { grid-template-columns:1fr; }
   .dash-layout { grid-template-columns:1fr; }
-  .dash-sidebar { display:none; }
+  .dash-sidebar { 
+    display: flex; 
+    flex-direction: row; 
+    overflow-x: auto; 
+    height: auto; 
+    padding: 10px 16px; 
+    border-right: none; 
+    border-bottom: 1px solid var(--border-soft); 
+    background: #fff; 
+    position: sticky; 
+    top: 0; 
+    z-index: 50; 
+    gap: 10px;
+  }
+  .sidebar-store-profile { display: none; }
+  .sidebar-nav { display: flex; flex-direction: row; gap: 8px; flex: 1; }
+  .sidebar-group { display: flex; flex-direction: row; gap: 8px; margin: 0; }
+  .sidebar-group-label { display: none; }
+  .dash-sidebar .sidebar-item { padding: 8px 14px; white-space: nowrap; margin: 0; }
+  .sidebar-footer { margin: 0; padding: 0; border: none; display: flex; align-items: center; }
+  .sidebar-footer .sidebar-item { padding: 8px 14px; white-space: nowrap; }
   .metrics { grid-template-columns:1fr 1fr; }
   .testi-grid { grid-template-columns:1fr; }
   .cat-strip { padding:14px 20px; top:56px; }

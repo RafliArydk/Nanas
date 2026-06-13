@@ -62,9 +62,9 @@ $navGroup = match ($user['role'] ?? 'guest') {
       </div>
       <!-- Guest state -->
       <div id="nav-guest" <?= $user ? ' style="display:none"' : '' ?>>
-        <div style="display:flex;align-items:center;gap:10px">
-          <button class="btn-cart-nav" onclick="openCart()">
-            🛒 Keranjang
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn-icon-nav" onclick="openCart()" title="Keranjang">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
             <span class="cart-count" id="cart-badge"><?= cart_count($pdo) ?></span>
           </button>
           <button class="btn-cta-nav" onclick="openAuth()">Masuk / Daftar</button>
@@ -72,10 +72,13 @@ $navGroup = match ($user['role'] ?? 'guest') {
       </div>
       <!-- Logged-in state — role account icon + dropdown -->
       <div id="nav-loggedin" <?= $user ? '' : ' style="display:none"' ?>>
-        <div style="display:flex;align-items:center;gap:10px">
-          <button class="btn-cart-nav" id="nav-cart-btn" onclick="openCart()" <?= !$user || $user['role'] !== 'buyer' ? ' style="display:none"' : '' ?>>
-            🛒 Keranjang
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn-icon-nav" id="nav-cart-btn" onclick="openCart()" title="Keranjang"<?= !$user || $user['role'] !== 'buyer' ? ' style="display:none"' : '' ?>>
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
             <span class="cart-count" id="cart-badge-auth"><?= cart_count($pdo) ?></span>
+          </button>
+          <button class="btn-icon-nav" id="nav-bell-btn" onclick="goToNotifications()" title="Notifikasi"<?= !$user ? ' style="display:none"' : '' ?>>
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           </button>
           <div class="nav-user-wrap">
             <div class="nav-user-chip" id="nav-user-chip" onclick="toggleUserDropdown()" title="<?= $user ? e($user['name']) : 'Akun' ?>">
@@ -103,53 +106,45 @@ $navGroup = match ($user['role'] ?? 'guest') {
       <h3>🛒 Keranjang Belanja</h3>
       <button class="close-btn" onclick="closeCart()">✕</button>
     </div>
+    <?php
+    $drawerItems = cart_items($pdo);
+    $drawerSubtotal = 0;
+    ?>
     <div class="cart-items">
-      <div class="cart-item">
-        <div class="ci-cover bc1">Atomic Habits</div>
-        <div class="ci-info">
-          <div class="ci-title">Atomic Habits</div>
-          <div class="ci-author">James Clear</div>
-          <div class="ci-qty">
-            <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
-            <span class="qty-val">1</span>
-            <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+      <?php if (empty($drawerItems)): ?>
+        <div style="padding:40px 20px;text-align:center;color:#666;">Keranjang belanja masih kosong.</div>
+      <?php else: ?>
+        <?php foreach ($drawerItems as $di): 
+          $drawerSubtotal += (int)$di['price'] * (int)$di['qty'];
+          $bcClass = 'bc' . (($di['id'] % 6) + 1);
+        ?>
+          <div class="cart-item">
+            <div class="ci-cover <?= $bcClass ?>"><?= e($di['name']) ?></div>
+            <div class="ci-info">
+              <div class="ci-title"><?= e($di['name']) ?></div>
+              <div class="ci-qty">
+                <!-- Using a form to post directly to actions.php?action=update_cart -->
+                <form action="index.php?action=update_cart" method="POST" style="display:inline-flex;align-items:center;gap:8px;">
+                  <input type="hidden" name="cart_id" value="<?= $di['cart_id'] ?>">
+                  <button type="submit" name="qty" value="<?= $di['qty'] - 1 ?>" class="qty-btn" <?= $di['qty'] <= 1 ? 'onclick="return confirm(\'Hapus item dari keranjang?\')"' : '' ?>>−</button>
+                  <span class="qty-val"><?= (int)$di['qty'] ?></span>
+                  <button type="submit" name="qty" value="<?= $di['qty'] + 1 ?>" class="qty-btn">+</button>
+                </form>
+              </div>
+            </div>
+            <div class="ci-price"><?= rupiah($di['price']) ?></div>
           </div>
-        </div>
-        <div class="ci-price">Rp 89.000</div>
-      </div>
-      <div class="cart-item">
-        <div class="ci-cover bc2">Laskar Pelangi</div>
-        <div class="ci-info">
-          <div class="ci-title">Laskar Pelangi</div>
-          <div class="ci-author">Andrea Hirata</div>
-          <div class="ci-qty">
-            <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
-            <span class="qty-val">2</span>
-            <button class="qty-btn" onclick="changeQty(this,1)">+</button>
-          </div>
-        </div>
-        <div class="ci-price">Rp 130.000</div>
-      </div>
-      <div class="cart-item">
-        <div class="ci-cover bc3">Midnight Library</div>
-        <div class="ci-info">
-          <div class="ci-title">The Midnight Library</div>
-          <div class="ci-author">Matt Haig</div>
-          <div class="ci-qty">
-            <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
-            <span class="qty-val">1</span>
-            <button class="qty-btn" onclick="changeQty(this,1)">+</button>
-          </div>
-        </div>
-        <div class="ci-price">Rp 76.000</div>
-      </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
     </div>
     <div class="cart-footer">
-      <div class="cart-total-row"><span>Subtotal (4 item)</span><span>Rp 295.000</span></div>
-      <div class="cart-total-row"><span>Ongkos Kirim</span><span>Rp 18.000</span></div>
-      <div class="cart-total-row"><span>Diskon</span><span class="discount-val">−Rp 18.000</span></div>
-      <div class="cart-total-row grand"><span>Total</span><span>Rp 295.000</span></div>
-      <button class="btn-checkout" onclick="closeCart();showPage('checkout')">Lanjut ke Checkout →</button>
+      <div class="cart-total-row"><span>Subtotal (<?= count($drawerItems) ?> item)</span><span><?= rupiah($drawerSubtotal) ?></span></div>
+      <div class="cart-total-row grand"><span>Total</span><span><?= rupiah($drawerSubtotal) ?></span></div>
+      <?php if (!empty($drawerItems)): ?>
+        <a href="index.php?page=checkout" class="btn-checkout" style="display:block;text-align:center;text-decoration:none;">Lanjut ke Checkout →</a>
+      <?php else: ?>
+        <button class="btn-checkout" style="opacity:0.5;cursor:not-allowed;" disabled>Lanjut ke Checkout →</button>
+      <?php endif; ?>
     </div>
   </div>
 

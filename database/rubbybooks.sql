@@ -29,6 +29,7 @@ CREATE TABLE products (
   description TEXT,
   price INT NOT NULL,
   stock INT NOT NULL DEFAULT 0,
+  book_condition ENUM('new', 'used_good', 'used_fair') NOT NULL DEFAULT 'new',
   image VARCHAR(255),
   status ENUM('active','inactive') NOT NULL DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -11,34 +11,69 @@
       <p class="hero-p">Ribuan judul pilihan — dari fiksi romantis hingga pengembangan diri — dikirim langsung ke pintu rumahmu dengan harga terbaik dan gratis ongkir.</p>
       <div class="hero-actions">
         <button class="btn-primary" onclick="showPage('catalog');setActiveByName('Katalog')">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
           Jelajahi Buku
         </button>
         <button class="btn-secondary" data-role="buyer" onclick="openAuth('seller')">✍️ Mulai Jual Buku</button>
       </div>
       <div class="hero-stats">
-        <div class="hero-stat"><div class="num">12K+</div><div class="lbl">Judul Buku</div></div>
-        <div class="hero-stat"><div class="num">4.8★</div><div class="lbl">Rating</div></div>
-        <div class="hero-stat"><div class="num">86K+</div><div class="lbl">Pembeli Puas</div></div>
-        <div class="hero-stat"><div class="num">500+</div><div class="lbl">Penjual Aktif</div></div>
+        <div class="hero-stat">
+          <div class="num">12K+</div>
+          <div class="lbl">Judul Buku</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">4.8★</div>
+          <div class="lbl">Rating</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">86K+</div>
+          <div class="lbl">Pembeli Puas</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">500+</div>
+          <div class="lbl">Penjual Aktif</div>
+        </div>
       </div>
     </div>
     <div class="hero-visual">
       <div class="bk-sm">
         <div class="bk-cover-sm bc1">Atomic<br>Habits</div>
-        <div class="bk-info-sm"><div class="t">Atomic Habits</div><div class="a">James Clear</div><div class="stars">★★★★★</div><div class="p">Rp 89.000</div></div>
+        <div class="bk-info-sm">
+          <div class="t">Atomic Habits</div>
+          <div class="a">James Clear</div>
+          <div class="stars">★★★★★</div>
+          <div class="p">Rp 89.000</div>
+        </div>
       </div>
       <div class="bk-sm">
         <div class="bk-cover-sm bc2">Laskar<br>Pelangi</div>
-        <div class="bk-info-sm"><div class="t">Laskar Pelangi</div><div class="a">Andrea Hirata</div><div class="stars">★★★★★</div><div class="p">Rp 65.000</div></div>
+        <div class="bk-info-sm">
+          <div class="t">Laskar Pelangi</div>
+          <div class="a">Andrea Hirata</div>
+          <div class="stars">★★★★★</div>
+          <div class="p">Rp 65.000</div>
+        </div>
       </div>
       <div class="bk-sm">
         <div class="bk-cover-sm bc3">The Midnight<br>Library</div>
-        <div class="bk-info-sm"><div class="t">Midnight Library</div><div class="a">Matt Haig</div><div class="stars">★★★★☆</div><div class="p">Rp 95.000</div></div>
+        <div class="bk-info-sm">
+          <div class="t">Midnight Library</div>
+          <div class="a">Matt Haig</div>
+          <div class="stars">★★★★☆</div>
+          <div class="p">Rp 95.000</div>
+        </div>
       </div>
       <div class="bk-sm">
         <div class="bk-cover-sm bc4">Rich Dad<br>Poor Dad</div>
-        <div class="bk-info-sm"><div class="t">Rich Dad Poor Dad</div><div class="a">R. Kiyosaki</div><div class="stars">★★★★★</div><div class="p">Rp 75.000</div></div>
+        <div class="bk-info-sm">
+          <div class="t">Rich Dad Poor Dad</div>
+          <div class="a">R. Kiyosaki</div>
+          <div class="stars">★★★★★</div>
+          <div class="p">Rp 75.000</div>
+        </div>
       </div>
     </div>
   </section>
@@ -60,7 +95,9 @@
   <section class="section">
     <div class="sec-head">
       <h2 class="sec-title">🔥 Buku <span>Terlaris</span></h2>
-      <a class="sec-link" href="#" onclick="showPage('catalog');return false">Lihat semua <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      <a class="sec-link" href="#" onclick="showPage('catalog');return false">Lihat semua <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg></a>
     </div>
     <div class="book-grid">
       <div class="book-card">
@@ -183,10 +220,26 @@
     <h2>Punya Buku untuk Dijual? ✍️</h2>
     <p>Bergabunglah dengan 500+ penjual aktif di RubbyBooks. Mudah, aman, dan komisi transparan.</p>
     <div class="seller-steps">
-      <div class="seller-step"><div class="step-icon">📝</div><div class="step-num">1</div><p>Daftar sebagai Penjual</p></div>
-      <div class="seller-step"><div class="step-icon">📸</div><div class="step-num">2</div><p>Upload produk & harga</p></div>
-      <div class="seller-step"><div class="step-icon">📦</div><div class="step-num">3</div><p>Terima pesanan & kirim</p></div>
-      <div class="seller-step"><div class="step-icon">💸</div><div class="step-num">4</div><p>Terima pembayaran otomatis</p></div>
+      <div class="seller-step">
+        <div class="step-icon">📝</div>
+        <div class="step-num">1</div>
+        <p>Daftar sebagai Penjual</p>
+      </div>
+      <div class="seller-step">
+        <div class="step-icon">📸</div>
+        <div class="step-num">2</div>
+        <p>Upload produk & harga</p>
+      </div>
+      <div class="seller-step">
+        <div class="step-icon">📦</div>
+        <div class="step-num">3</div>
+        <p>Terima pesanan & kirim</p>
+      </div>
+      <div class="seller-step">
+        <div class="step-icon">💸</div>
+        <div class="step-num">4</div>
+        <p>Terima pembayaran otomatis</p>
+      </div>
     </div>
     <button class="btn-primary" onclick="openAuth()">🚀 Mulai Berjualan Gratis</button>
   </div>
@@ -201,21 +254,30 @@
         <p class="testi-body">"Pengiriman super cepat! Buku datang dalam kondisi sempurna, dikemas dengan cantik. Bakal beli lagi terus dari RubbyBooks."</p>
         <div class="testi-user">
           <div class="avatar">SR</div>
-          <div><div class="testi-name">Sari Rahayu</div><div class="testi-loc">📍 Surabaya · ★★★★★</div></div>
+          <div>
+            <div class="testi-name">Sari Rahayu</div>
+            <div class="testi-loc">📍 Surabaya · ★★★★★</div>
+          </div>
         </div>
       </div>
       <div class="testi-card">
         <p class="testi-body">"Harganya jauh lebih murah dibanding toko buku fisik. Koleksinya lengkap banget, dari buku lokal sampai impor ada semua!"</p>
         <div class="testi-user">
           <div class="avatar" style="background:linear-gradient(135deg,#1e40af,#1d4ed8)">BW</div>
-          <div><div class="testi-name">Bimo Wicaksono</div><div class="testi-loc">📍 Bandung · ★★★★★</div></div>
+          <div>
+            <div class="testi-name">Bimo Wicaksono</div>
+            <div class="testi-loc">📍 Bandung · ★★★★★</div>
+          </div>
         </div>
       </div>
       <div class="testi-card">
         <p class="testi-body">"Sebagai penjual, dashboard-nya sangat mudah dipakai. Bisa pantau penjualan real-time. Komisi juga sangat transparan!"</p>
         <div class="testi-user">
           <div class="avatar" style="background:linear-gradient(135deg,#065f46,#047857)">DL</div>
-          <div><div class="testi-name">Dewi Lestari</div><div class="testi-loc">📍 Penjual Jakarta · ★★★★★</div></div>
+          <div>
+            <div class="testi-name">Dewi Lestari</div>
+            <div class="testi-loc">📍 Penjual Jakarta · ★★★★★</div>
+          </div>
         </div>
       </div>
     </div>

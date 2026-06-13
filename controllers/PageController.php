@@ -35,17 +35,80 @@ function page_data(PDO $pdo, string $page): array
         return ['products' => $pdo->query('SELECT p.*, c.name category FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY p.id DESC LIMIT 4')->fetchAll()];
     }
     if ($page === 'catalog') {
-        $q = '%' . ($_GET['q'] ?? '') . '%';
-        $cat = (int) ($_GET['category'] ?? 0);
-        $sql = 'SELECT p.*, c.name category FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" AND p.name LIKE ?';
-        $params = [$q];
-        if ($cat) {
-            $sql .= ' AND p.category_id=?';
-            $params[] = $cat;
+        $qStr = $_GET['q'] ?? '';
+        $q = '%' . $qStr . '%';
+        $categoriesFilter = array_filter(array_map('intval', (array) ($_GET['category'] ?? [])));
+        $priceMax = (int) ($_GET['price_max'] ?? 300000);
+        $ratingsFilter = array_filter(array_map('floatval', (array) ($_GET['rating'] ?? [])));
+        $conditionsFilter = array_filter((array) ($_GET['condition'] ?? []), fn($v) => in_array($v, ['new', 'used_good', 'used_fair'], true));
+        $sort = $_GET['sort'] ?? 'Terlaris';
+        $p = max(1, (int) ($_GET['p'] ?? 1));
+        $limit = 8;
+        $offset = ($p - 1) * $limit;
+
+        $sql = 'SELECT p.*, c.name category, 
+                       COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id=p.id), 0) as avg_rating,
+                       COALESCE((SELECT SUM(qty) FROM order_items WHERE product_id=p.id), 0) as sales_count
+                FROM products p 
+                JOIN categories c ON c.id=p.category_id 
+                WHERE p.status="active" AND p.name LIKE ? AND p.price <= ?';
+        
+        $params = [$q, $priceMax];
+
+        if (!empty($categoriesFilter)) {
+            $placeholders = implode(',', array_fill(0, count($categoriesFilter), '?'));
+            $sql .= " AND p.category_id IN ($placeholders)";
+            $params = array_merge($params, $categoriesFilter);
         }
-        $stmt = $pdo->prepare($sql . ' ORDER BY p.created_at DESC');
+
+        if (!empty($conditionsFilter)) {
+            $placeholders = implode(',', array_fill(0, count($conditionsFilter), '?'));
+            $sql .= " AND p.book_condition IN ($placeholders)";
+            $params = array_merge($params, $conditionsFilter);
+        }
+
+        // Ratings filter (minimum rating requested among selected options)
+        if (!empty($ratingsFilter)) {
+            $minRating = min($ratingsFilter);
+            $sql .= " AND COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id=p.id), 0) >= ?";
+            $params[] = $minRating;
+        }
+
+        // Count total for pagination
+        $countSql = "SELECT COUNT(*) FROM ($sql) as t";
+        $countStmt = $pdo->prepare($countSql);
+        $countStmt->execute($params);
+        $totalItems = (int) $countStmt->fetchColumn();
+        $totalPages = max(1, ceil($totalItems / $limit));
+
+        // Sort
+        $orderBy = match($sort) {
+            'Terbaru' => 'p.created_at DESC',
+            'Harga Terendah' => 'p.price ASC',
+            'Harga Tertinggi' => 'p.price DESC',
+            'Rating Tertinggi' => 'avg_rating DESC',
+            default => 'sales_count DESC, p.id DESC', // Terlaris
+        };
+
+        $sql .= " ORDER BY $orderBy LIMIT $limit OFFSET $offset";
+        $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
-        return ['products' => $stmt->fetchAll(), 'categories' => $pdo->query('SELECT * FROM categories ORDER BY name')->fetchAll(), 'cat' => $cat];
+
+        return [
+            'products' => $stmt->fetchAll(), 
+            'categories' => $pdo->query('SELECT * FROM categories ORDER BY name')->fetchAll(),
+            'filters' => [
+                'q' => $qStr,
+                'category' => $categoriesFilter,
+                'price_max' => $priceMax,
+                'rating' => $ratingsFilter,
+                'condition' => $conditionsFilter,
+                'sort' => $sort,
+                'page' => $p,
+                'totalPages' => $totalPages,
+                'totalItems' => $totalItems
+            ]
+        ];
     }
     if (in_array($page, ['buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications', 'cart', 'tracking'], true)) {
         $base = ['buyerSidebar' => buyer_sidebar_data($pdo)];
@@ -64,10 +127,26 @@ function page_data(PDO $pdo, string $page): array
             $stmt->execute([$uid]);
             return array_merge($base, ['items' => $stmt->fetchAll()]);
         }
-        if (in_array($page, ['buyer_orders', 'tracking'], true)) {
+        if ($page === 'buyer_orders') {
+            $stmt = $pdo->prepare('SELECT * FROM orders WHERE buyer_id=? ORDER BY id DESC');
+            $stmt->execute([$uid]);
+            $orders = $stmt->fetchAll();
+            $itemsStmt = $pdo->prepare('SELECT oi.*, p.name FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE oi.order_id = ?');
+            foreach ($orders as &$o) {
+                $itemsStmt->execute([$o['id']]);
+                $o['items'] = $itemsStmt->fetchAll();
+            }
+            return array_merge($base, ['orders' => $orders]);
+        }
+        if ($page === 'tracking') {
             $stmt = $pdo->prepare('SELECT * FROM orders WHERE buyer_id=? ORDER BY id DESC');
             $stmt->execute([$uid]);
             return array_merge($base, ['orders' => $stmt->fetchAll()]);
+        }
+        if ($page === 'buyer_wishlist') {
+            $stmt = $pdo->prepare('SELECT w.*, p.*, c.name category FROM wishlists w JOIN products p ON p.id = w.product_id JOIN categories c ON c.id = p.category_id WHERE w.buyer_id = ? ORDER BY w.id DESC');
+            $stmt->execute([$uid]);
+            return array_merge($base, ['wishlistItems' => $stmt->fetchAll()]);
         }
         if ($page === 'buyer_reviews') {
             $stmt = $pdo->prepare('SELECT r.*, p.name product_name FROM reviews r JOIN products p ON p.id=r.product_id WHERE r.buyer_id=? ORDER BY r.id DESC');
@@ -114,13 +193,39 @@ function page_data(PDO $pdo, string $page): array
         $stmtRecent->execute([$sellerId, $sellerId, $sellerId]);
         $recentOrders = $stmtRecent->fetchAll();
 
+        // Monthly Sales (Last 6 Months)
+        $stmtSales = $pdo->prepare("SELECT DATE_FORMAT(o.created_at, '%Y-%m') as month_key, SUM(oi.subtotal) as total FROM orders o JOIN order_items oi ON oi.order_id = o.id JOIN products p ON p.id = oi.product_id WHERE p.seller_id = ? AND o.created_at >= DATE_SUB(NOW(), INTERVAL 5 MONTH) AND o.status != 'cancelled' GROUP BY month_key ORDER BY month_key ASC");
+        $stmtSales->execute([$sellerId]);
+        $salesDataRaw = [];
+        foreach ($stmtSales->fetchAll() as $row) {
+            $salesDataRaw[$row['month_key']] = (float)$row['total'];
+        }
+        
+        $monthlySales = [];
+        $totalSales6Months = 0;
+        for ($i = 5; $i >= 0; $i--) {
+            $monthKey = date('Y-m', strtotime("-$i months"));
+            $monthName = date('M', strtotime("-$i months"));
+            $val = $salesDataRaw[$monthKey] ?? 0;
+            $monthlySales[] = ['label' => $monthName, 'val' => $val];
+            $totalSales6Months += $val;
+        }
+
+        // Category Distribution
+        $stmtCats = $pdo->prepare("SELECT c.name, COUNT(p.id) as product_count FROM products p JOIN categories c ON c.id = p.category_id WHERE p.seller_id = ? AND p.status = 'active' GROUP BY c.id ORDER BY product_count DESC LIMIT 4");
+        $stmtCats->execute([$sellerId]);
+        $categoryDistribution = $stmtCats->fetchAll();
+
         return [
             'revenue' => $revenue,
             'totalOrders' => $totalOrders,
             'activeProducts' => $activeProducts,
             'lowStockProducts' => $lowStockProducts,
             'ratingData' => $ratingData,
-            'recentOrders' => $recentOrders
+            'recentOrders' => $recentOrders,
+            'monthlySales' => $monthlySales,
+            'totalSales6Months' => $totalSales6Months,
+            'categoryDistribution' => $categoryDistribution
         ];
     }
     if ($page === 'seller_products') {

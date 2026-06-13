@@ -1,4 +1,5 @@
-<?php $buyerMenu = 'account'; $user = current_user(); ?>
+<?php $buyerMenu = 'account';
+$user = current_user(); ?>
 <div id="page-buyer-account" class="page active">
   <div class="dash-layout">
     <?php require __DIR__ . '/partials/sidebar.php'; ?>
@@ -11,10 +12,10 @@
       </div>
       <div class="dash-body">
         <div class="buyer-panel" style="max-width:560px">
-          <form class="buyer-form" onsubmit="showToast('✅ Profil berhasil disimpan');return false">
+          <form class="buyer-form" method="POST" action="index.php?action=update_account">
             <div class="form-group">
               <label>Nama Lengkap</label>
-              <input class="form-input" type="text" value="<?= e($user['name']) ?>" readonly>
+              <input class="form-input" type="text" name="name" value="<?= e($user['name']) ?>" required>
             </div>
             <div class="form-group">
               <label>Email</label>
@@ -26,7 +27,7 @@
             </div>
             <div class="form-group">
               <label>Password Baru</label>
-              <input class="form-input" type="password" placeholder="Kosongkan jika tidak diubah">
+              <input class="form-input" type="password" name="password" placeholder="Kosongkan jika tidak diubah" minlength="6">
             </div>
             <button type="submit" class="btn-submit" style="max-width:220px">Simpan Perubahan</button>
           </form>

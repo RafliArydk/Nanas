@@ -34,12 +34,7 @@
           <button class="sidebar-item" onclick="showToast('💰 Laporan Penjualan')">
             <span class="si">💰</span> Laporan Penjualan
           </button>
-          <button class="sidebar-item" onclick="showToast('🏦 Penarikan Dana')">
-            <span class="si">🏦</span> Penarikan Dana
-          </button>
-          <button class="sidebar-item" onclick="showToast('🎟️ Promosi & Voucher')">
-            <span class="si">🎟️</span> Promosi & Voucher
-          </button>
+
         </div>
         <div class="sidebar-group">
           <div class="sidebar-group-label">Pengaturan</div>
@@ -147,54 +142,36 @@
               </div>
               <div class="chart-tabs">
                 <button class="chart-tab active">Bulan</button>
-                <button class="chart-tab" onclick="showToast('📈 Tampilan Mingguan')">Minggu</button>
               </div>
             </div>
             <div class="bar-chart-wrap">
+              <?php
+                $maxSales = 0;
+                foreach ($monthlySales as $m) {
+                    if ($m['val'] > $maxSales) $maxSales = $m['val'];
+                }
+                $gridMax = $maxSales > 0 ? ceil($maxSales / 1000000) * 1000000 : 5000000;
+              ?>
               <div class="bar-chart-grid">
-                <div class="bar-grid-line"><span class="bar-grid-label">5jt</span></div>
-                <div class="bar-grid-line"><span class="bar-grid-label">3,75jt</span></div>
-                <div class="bar-grid-line"><span class="bar-grid-label">2,5jt</span></div>
-                <div class="bar-grid-line"><span class="bar-grid-label">1,25jt</span></div>
+                <div class="bar-grid-line"><span class="bar-grid-label"><?= $gridMax / 1000000 ?>jt</span></div>
+                <div class="bar-grid-line"><span class="bar-grid-label"><?= ($gridMax * 0.75) / 1000000 ?>jt</span></div>
+                <div class="bar-grid-line"><span class="bar-grid-label"><?= ($gridMax * 0.5) / 1000000 ?>jt</span></div>
+                <div class="bar-grid-line"><span class="bar-grid-label"><?= ($gridMax * 0.25) / 1000000 ?>jt</span></div>
                 <div class="bar-grid-line"><span class="bar-grid-label">0</span></div>
               </div>
               <div class="bar-chart-bars">
-                <div class="bar-item">
-                  <div class="bar-fill" style="height:42%;background:#e2e8f0">
-                    <div class="bar-tooltip">Des: Rp 2,1jt</div>
+                <?php foreach ($monthlySales as $idx => $m): 
+                  $pct = $gridMax > 0 ? ($m['val'] / $gridMax) * 100 : 0;
+                  $pct = max(2, min(100, $pct));
+                  $isCurrent = ($idx === count($monthlySales) - 1);
+                ?>
+                <div class="bar-item <?= $isCurrent ? 'bar-current' : '' ?>">
+                  <div class="bar-fill" style="height:<?= $pct ?>%;background:<?= $isCurrent ? 'linear-gradient(180deg, var(--accent-mid), var(--accent))' : '#e2e8f0' ?>">
+                    <div class="bar-tooltip"><?= $m['label'] ?>: Rp <?= number_format($m['val'], 0, ',', '.') ?></div>
                   </div>
-                  <span class="bar-label">Des</span>
+                  <span class="bar-label" <?= $isCurrent ? 'style="color:var(--accent);font-weight:700"' : '' ?>><?= $m['label'] ?></span>
                 </div>
-                <div class="bar-item">
-                  <div class="bar-fill" style="height:32%;background:#e2e8f0">
-                    <div class="bar-tooltip">Jan: Rp 1,6jt</div>
-                  </div>
-                  <span class="bar-label">Jan</span>
-                </div>
-                <div class="bar-item">
-                  <div class="bar-fill" style="height:54%;background:#e2e8f0">
-                    <div class="bar-tooltip">Feb: Rp 2,7jt</div>
-                  </div>
-                  <span class="bar-label">Feb</span>
-                </div>
-                <div class="bar-item">
-                  <div class="bar-fill" style="height:44%;background:#e2e8f0">
-                    <div class="bar-tooltip">Mar: Rp 2,2jt</div>
-                  </div>
-                  <span class="bar-label">Mar</span>
-                </div>
-                <div class="bar-item">
-                  <div class="bar-fill" style="height:66%;background:#bbf7d0">
-                    <div class="bar-tooltip">Apr: Rp 3,3jt</div>
-                  </div>
-                  <span class="bar-label">Apr</span>
-                </div>
-                <div class="bar-item bar-current">
-                  <div class="bar-fill" style="height:96%;background:linear-gradient(180deg, var(--accent-mid), var(--accent))">
-                    <div class="bar-tooltip">Mei: Rp 4,8jt ✨</div>
-                  </div>
-                  <span class="bar-label" style="color:var(--accent);font-weight:700">Mei</span>
-                </div>
+                <?php endforeach; ?>
               </div>
             </div>
             <div class="revenue-summary">
@@ -202,20 +179,20 @@
                 <div class="rev-dot" style="background:var(--accent)"></div>
                 <div>
                   <div class="rev-label">Bulan Ini</div>
-                  <div class="rev-val">Rp 4,8jt</div>
+                  <div class="rev-val">Rp <?= number_format(end($monthlySales)['val'], 0, ',', '.') ?></div>
                 </div>
               </div>
               <div class="rev-item">
                 <div class="rev-dot" style="background:#e2e8f0"></div>
                 <div>
                   <div class="rev-label">Rata-rata</div>
-                  <div class="rev-val">Rp 2,8jt</div>
+                  <div class="rev-val">Rp <?= number_format($totalSales6Months / 6, 0, ',', '.') ?></div>
                 </div>
               </div>
               <div class="rev-item" style="margin-left:auto">
                 <div>
                   <div class="rev-label">Total 6 Bulan</div>
-                  <div class="rev-val" style="color:var(--accent)">Rp 16,7jt</div>
+                  <div class="rev-val" style="color:var(--accent)">Rp <?= number_format($totalSales6Months, 0, ',', '.') ?></div>
                 </div>
               </div>
             </div>
@@ -233,55 +210,44 @@
               <div style="position:relative;display:inline-block">
                 <svg width="130" height="130" viewBox="0 0 130 130">
                   <circle cx="65" cy="65" r="50" fill="none" stroke="#f1f5f9" stroke-width="18"/>
-                  <!-- Pengembangan Diri 40% -->
-                  <circle cx="65" cy="65" r="50" fill="none" stroke="var(--accent)" stroke-width="18"
-                    stroke-dasharray="125.7 188.5" stroke-dashoffset="31.4" stroke-linecap="round"
+                  <?php
+                    $colors = ['var(--accent)', '#86efac', '#fbbf24', '#e2e8f0'];
+                    $totalProducts = array_sum(array_column($categoryDistribution, 'product_count'));
+                    $circumference = 2 * M_PI * 50; // ~314.159
+                    $currentOffset = 0;
+                    
+                    foreach ($categoryDistribution as $index => $cat):
+                        if ($totalProducts == 0) break;
+                        $percentage = $cat['product_count'] / $totalProducts;
+                        $dashLength = $percentage * $circumference;
+                        $gapLength = $circumference - $dashLength;
+                        $dasharray = "$dashLength $gapLength";
+                        $dashoffset = -$currentOffset;
+                        $currentOffset += $dashLength;
+                  ?>
+                  <circle cx="65" cy="65" r="50" fill="none" stroke="<?= $colors[$index % 4] ?>" stroke-width="18"
+                    stroke-dasharray="<?= $dasharray ?>" stroke-dashoffset="<?= $dashoffset ?>" stroke-linecap="round"
                     transform="rotate(-90 65 65)"/>
-                  <!-- Sastra 22% -->
-                  <circle cx="65" cy="65" r="50" fill="none" stroke="#86efac" stroke-width="18"
-                    stroke-dasharray="69.1 245.1" stroke-dashoffset="-94.2" stroke-linecap="round"
-                    transform="rotate(-90 65 65)"/>
-                  <!-- Keuangan 13% -->
-                  <circle cx="65" cy="65" r="50" fill="none" stroke="#fbbf24" stroke-width="18"
-                    stroke-dasharray="40.8 273.3" stroke-dashoffset="-163.4" stroke-linecap="round"
-                    transform="rotate(-90 65 65)"/>
-                  <!-- Lainnya 25% -->
-                  <circle cx="65" cy="65" r="50" fill="none" stroke="#e2e8f0" stroke-width="18"
-                    stroke-dasharray="78.5 235.6" stroke-dashoffset="-204.2" stroke-linecap="round"
-                    transform="rotate(-90 65 65)"/>
-                  <text x="65" y="60" text-anchor="middle" fill="#1e293b" font-size="18" font-weight="700" font-family="Playfair Display, serif">24</text>
+                  <?php endforeach; ?>
+                  <text x="65" y="60" text-anchor="middle" fill="#1e293b" font-size="18" font-weight="700" font-family="Playfair Display, serif"><?= $totalProducts ?></text>
                   <text x="65" y="75" text-anchor="middle" fill="#94a3b8" font-size="9.5" font-family="Plus Jakarta Sans, sans-serif">produk</text>
                 </svg>
               </div>
               <div class="donut-legend-grid">
+                <?php foreach ($categoryDistribution as $index => $cat): 
+                  $percentage = $totalProducts > 0 ? round(($cat['product_count'] / $totalProducts) * 100) : 0;
+                ?>
                 <div class="donut-legend-item">
-                  <div class="donut-legend-dot" style="background:var(--accent)"></div>
+                  <div class="donut-legend-dot" style="background:<?= $colors[$index % 4] ?>"></div>
                   <div class="donut-legend-info">
-                    <div class="dn">Pengembangan</div>
-                    <div class="dv">40%</div>
+                    <div class="dn"><?= e(strlen($cat['name']) > 12 ? substr($cat['name'], 0, 10) . '..' : $cat['name']) ?></div>
+                    <div class="dv"><?= $percentage ?>%</div>
                   </div>
                 </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-dot" style="background:#86efac"></div>
-                  <div class="donut-legend-info">
-                    <div class="dn">Sastra</div>
-                    <div class="dv">22%</div>
-                  </div>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-dot" style="background:#fbbf24"></div>
-                  <div class="donut-legend-info">
-                    <div class="dn">Keuangan</div>
-                    <div class="dv">13%</div>
-                  </div>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-dot" style="background:#e2e8f0"></div>
-                  <div class="donut-legend-info">
-                    <div class="dn">Lainnya</div>
-                    <div class="dv">25%</div>
-                  </div>
-                </div>
+                <?php endforeach; ?>
+                <?php if (empty($categoryDistribution)): ?>
+                  <div style="font-size: 12px; color: #94a3b8;">Belum ada data produk</div>
+                <?php endif; ?>
               </div>
             </div>
           </div>
@@ -362,22 +328,8 @@
                   </div>
                   <span class="qa-arrow">›</span>
                 </button>
-                <button class="quick-action-item" onclick="showToast('🎟️ Buat promo & voucher')">
-                  <div class="qa-icon" style="background:#fffbeb">🎟️</div>
-                  <div>
-                    <div class="qa-title">Buat Promosi</div>
-                    <div class="qa-desc">Diskon, flash sale, voucher</div>
-                  </div>
-                  <span class="qa-arrow">›</span>
-                </button>
-                <button class="quick-action-item" onclick="showToast('🏦 Tarik saldo toko')">
-                  <div class="qa-icon" style="background:#eff6ff">🏦</div>
-                  <div>
-                    <div class="qa-title">Tarik Dana</div>
-                    <div class="qa-desc">Saldo: Rp <?= number_format((float)$revenue, 0, ',', '.') ?></div>
-                  </div>
-                  <span class="qa-arrow">›</span>
-                </button>
+
+
                 <button class="quick-action-item" onclick="showToast('💬 Balas ulasan pembeli')">
                   <div class="qa-icon" style="background:#fdf4ff">💬</div>
                   <div>

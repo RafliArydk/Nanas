@@ -58,12 +58,6 @@ function require_role(array|string $roles): void
     }
 }
 
-function initials(string $name): string
-{
-    $parts = preg_split('/\s+/', trim($name));
-    return strtoupper(substr($parts[0] ?? 'U', 0, 1) . substr($parts[1] ?? '', 0, 1));
-}
-
 function role_icon(string $role): string
 {
     return match ($role) {
@@ -147,12 +141,22 @@ function cart_count(PDO $pdo): int
     return (int) $stmt->fetchColumn();
 }
 
+function cart_items(PDO $pdo): array
+{
+    $user = current_user();
+    if (!$user) {
+        return [];
+    }
+    $stmt = $pdo->prepare('SELECT c.id cart_id, c.qty, p.* FROM carts c JOIN products p ON p.id = c.product_id WHERE c.buyer_id = ?');
+    $stmt->execute([$user['id']]);
+    return $stmt->fetchAll();
+}
+
 function buyer_menu_items(): array
 {
     return [
         'buyer' => ['label' => 'Beranda', 'icon' => '🏠', 'page' => 'buyer'],
         'account' => ['label' => 'Akun', 'icon' => '👤', 'page' => 'buyer_account'],
-        'catalog' => ['label' => 'Katalog Buku', 'icon' => '📚', 'page' => 'catalog'],
         'wishlist' => ['label' => 'Wishlist', 'icon' => '❤️', 'page' => 'buyer_wishlist'],
         'cart' => ['label' => 'Keranjang', 'icon' => '🛒', 'page' => 'buyer_cart'],
         'orders' => ['label' => 'Pesanan Saya', 'icon' => '📦', 'page' => 'buyer_orders'],

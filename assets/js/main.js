@@ -2,8 +2,7 @@
 //  STATE
 // ══════════════════════════════════════════
 let cartCount = 3;
-let currentUser = null;   // { name, initials, role: 'buyer'|'seller'|'admin' }
-let selectedRole = 'buyer';
+let currentUser = null;   // { name, role: 'buyer'|'seller'|'admin' }
 
 // Role display config
 const ROLE_CONFIG = {
@@ -11,9 +10,6 @@ const ROLE_CONFIG = {
     roleIcon:     '🛒',
     chipLabel:    'Akun Saya',
     chipSublabel: 'Pembeli · RubbyBooks',
-    badgeText:    '🛒 Masuk sebagai Pembeli',
-    tagline:      'Selamat datang kembali, pembaca!',
-    navLinks:     ['home', 'catalog', 'tracking'],
     showCart:     true,
     showSearch:   true,
     dropdown: [
@@ -31,9 +27,6 @@ const ROLE_CONFIG = {
     roleIcon:     '📦',
     chipLabel:    'Seller Dashboard',
     chipSublabel: 'Penjual · RubbyBooks',
-    badgeText:    '📦 Masuk sebagai Penjual',
-    tagline:      'Kelola toko buku Anda dengan mudah.',
-    navLinks:     [],             // sembunyikan semua nav links — seller di dashboard
     showCart:     false,
     showSearch:   false,
     dropdown: [
@@ -51,9 +44,6 @@ const ROLE_CONFIG = {
     roleIcon:     '🔐',
     chipLabel:    'Admin Panel',
     chipSublabel: 'Administrator · RubbyBooks',
-    badgeText:    '🔐 Akses Administrator',
-    tagline:      'Masuk dengan kredensial admin.',
-    navLinks:     [],             // admin hanya di panel
     showCart:     false,
     showSearch:   false,
     dropdown: [
@@ -122,14 +112,17 @@ function showPage(name) {
 }
 
 function scrollToHomeSection(sectionId) {
-  // Make sure we're on the home page first
   const homePage = document.getElementById('page-home');
-  if (homePage && !homePage.classList.contains('active')) {
+  if (!homePage) {
+    // Not on home page at all — redirect with hash
+    window.location.href = 'index.php?page=home#' + sectionId;
+    return;
+  }
+  if (!homePage.classList.contains('active')) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     homePage.classList.add('active');
     updateNavActive('home');
   }
-  // Wait a tick then scroll to the section
   setTimeout(() => {
     const target = document.getElementById(sectionId);
     if (target) {
@@ -140,9 +133,9 @@ function scrollToHomeSection(sectionId) {
 
 function goToNotifications() {
   const role = currentUser ? currentUser.role : 'guest';
-  if (role === 'buyer')  { showPage('buyer_notifications'); return; }
-  if (role === 'seller') { showPage('seller_notifications'); return; }
-  if (role === 'admin')  { showPage('admin_notifications');  return; }
+  if (role === 'buyer')  { _showPageDirect('buyer_notifications'); return; }
+  if (role === 'seller') { _showPageDirect('seller_notifications'); return; }
+  if (role === 'admin')  { _showPageDirect('admin_notifications');  return; }
   openAuth();
 }
 
@@ -255,7 +248,6 @@ function switchTab(tab) {
 }
 
 function selectRegRole(role) {
-  selectedRole = role;
   const input = document.getElementById('reg-role');
   if (input) input.value = role;
   document.querySelectorAll('.auth-role-type').forEach(el => {
@@ -371,14 +363,6 @@ document.addEventListener('click', e => {
   if (wrap && !wrap.contains(e.target)) closeUserDropdown();
 });
 
-// ── Legacy goToDashboard (kept for compatibility) ──
-function goToDashboard() {
-  closeUserDropdown();
-  if (!currentUser) return;
-  const page = { buyer: 'buyer', seller: 'seller', admin: 'admin' };
-  _showPageDirect(page[currentUser.role] || 'home');
-}
-
 // ══════════════════════════════════════════
 //  LOGOUT
 // ══════════════════════════════════════════
@@ -403,11 +387,6 @@ function closeCart() {
   document.getElementById('cartOverlay').classList.remove('open');
   document.getElementById('cartDrawer').classList.remove('open');
   document.body.style.overflow = '';
-}
-function changeQty(btn, delta) {
-  const el = btn.parentElement.querySelector('.qty-val');
-  let q = Math.max(1, parseInt(el.textContent) + delta);
-  el.textContent = q;
 }
 
 // ══════════════════════════════════════════
@@ -456,16 +435,23 @@ function toggleWishFeatured(btn) {
 //  FILTERS
 // ══════════════════════════════════════════
 function filterCat(el) {
-  el.closest('.cat-strip').querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  showToast('🔍 Menampilkan: ' + el.textContent.trim());
+  const text = el.textContent.trim().replace(/^[^\s]+ /, ''); // hapus icon
+  if (text === 'Semua') {
+    window.location.href = 'index.php?page=catalog';
+  } else {
+    // Ideally we would map names to IDs, but for a simple fix, we'll search by query for now,
+    // or just pass a special param. Since we don't know the ID exactly from the UI text, 
+    // we can trigger a search.
+    window.location.href = 'index.php?page=catalog&q=' + encodeURIComponent(text);
+  }
 }
 function selectPay(el) {
   (el.closest('.pay-grid') || el.parentElement).querySelectorAll('.pay-opt').forEach(o => o.classList.remove('active'));
   el.classList.add('active');
 }
 function updatePrice(input) {
-  document.getElementById('price-max').textContent = 'Rp ' + parseInt(input.value).toLocaleString('id-ID');
+  const el = document.getElementById('price-max');
+  if (el) el.textContent = 'Rp ' + parseInt(input.value).toLocaleString('id-ID');
 }
 
 // ══════════════════════════════════════════
@@ -489,7 +475,24 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeCart(); closeAuth(); closeUserDropdown(); }
 });
 
+// Setup on page load
 document.addEventListener('DOMContentLoaded', () => {
+  // Global search
+  const searchInput = document.querySelector('#nav-search input');
+  if (searchInput) {
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const val = searchInput.value.trim();
+        if (val) {
+          window.location.href = 'index.php?page=catalog&q=' + encodeURIComponent(val);
+        } else {
+          window.location.href = 'index.php?page=catalog';
+        }
+      }
+    });
+  }
+
+  // Nav + Auth init
   const params = new URLSearchParams(window.location.search);
   const page = params.get('page') || 'home';
   updateNavActive(page);
@@ -505,5 +508,14 @@ document.addEventListener('DOMContentLoaded', () => {
     openAuth('masuk');
   } else if (page === 'register') {
     openAuth('seller');
+  }
+
+  if (window.location.hash) {
+    const sectionId = window.location.hash.substring(1);
+    if (page === 'home' && document.getElementById(sectionId)) {
+      setTimeout(() => {
+        document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
   }
 });
